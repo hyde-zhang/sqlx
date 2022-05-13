@@ -392,6 +392,18 @@ func TestFixBounds(t *testing.T) {
 			loop:   2,
 		},
 		{
+			name:   `table named "values"`,
+			query:  `INSERT INTO values (a, b) VALUES (:a, :b)`,
+			expect: `INSERT INTO values (a, b) VALUES (:a, :b),(:a, :b)`,
+			loop:   2,
+		},
+		{
+			name:   `select from values list`,
+			query:  `SELECT * FROM (VALUES (:a, :b)) AS v (colA, colB)`,
+			expect: `SELECT * FROM (VALUES (:a, :b),(:a, :b)) AS v (colA, colB)`,
+			loop:   2,
+		},
+		{
 			name: `multiline indented query`,
 			query: `INSERT INTO foo (
 		a,
@@ -428,7 +440,7 @@ func TestFixBounds(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := fixBound(tc.query, tc.loop)
 			if res != tc.expect {
-				t.Errorf("mismatched results")
+				t.Errorf("mismatched results, expected: %s, got: %s", tc.expect, res)
 			}
 		})
 	}
